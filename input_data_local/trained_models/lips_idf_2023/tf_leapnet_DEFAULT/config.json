@@ -1,0 +1,131 @@
+{
+    "activation": "leaky_relu",
+    "batch_size": 128,
+    "ckpt_freq": 50,
+    "dropout": 0.0,
+    "epochs": 400,
+    "eval_batch_size": 14000,
+    "input_dropout": 0.0,
+    "kwargs_tau": [
+        [
+            68,
+            [
+                1,
+                2,
+                1,
+                1,
+                2,
+                1,
+                2
+            ]
+        ],
+        [
+            99,
+            [
+                1,
+                1,
+                2,
+                2,
+                1,
+                2,
+                2,
+                2,
+                1,
+                1,
+                2,
+                2
+            ]
+        ],
+        [
+            48,
+            [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                2,
+                2,
+                1,
+                1,
+                2,
+                1,
+                1,
+                1,
+                1,
+                2
+            ]
+        ],
+        [
+            76,
+            [
+                1,
+                2,
+                1,
+                2,
+                1,
+                1,
+                1,
+                1,
+                1,
+                2,
+                1
+            ]
+        ],
+        [
+            16,
+            [
+                1,
+                2,
+                1,
+                2,
+                1,
+                2,
+                2
+            ]
+        ],
+        [
+            26,
+            [
+                1,
+                2,
+                1,
+                1,
+                2,
+                1,
+                2
+            ]
+        ]
+    ],
+    "layer": "resnet",
+    "loss": {
+        "name": "mse"
+    },
+    "lr": 0.0001,
+    "metrics": [
+        "mae"
+    ],
+    "mult_by_zero_lines_pred": false,
+    "name": "tf_leapnet",
+    "optimizer": {
+        "name": "adam",
+        "params": {
+            "lr": 0.0003
+        }
+    },
+    "save_freq": false,
+    "scale_input_dec_layer": 400,
+    "scale_input_enc_layer": null,
+    "scale_main_layer": 400,
+    "shuffle": true,
+    "sizes_enc": [],
+    "sizes_main": [
+        400,
+        400
+    ],
+    "sizes_out": [],
+    "topo_vect_to_tau": "given_list",
+    "train_batch_size": 128
+}

@@ -24,7 +24,7 @@ configuration={
     "test_ratio":{"ml": 0.6, "physics":0.4},
     "test_ood_ratio":{"ml": 0.6, "physics":0.4},
     "value_by_color":{"g":2,"o":1,"r":0},
-    "max_speed_ratio_allowed":10
+    "max_speed_ratio_allowed":50
 }
 
 def evaluate_model(benchmark, model):

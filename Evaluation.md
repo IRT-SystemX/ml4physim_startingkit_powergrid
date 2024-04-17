@@ -109,29 +109,30 @@ rejected. Thus, it would be equivalent to a null global score.
 
 Using the notation introduced in the previous subsection, let us consider the following configuration:
 
-• $\alpha_{\text{ML}} = 0.4$  
-• $\alpha_{\text{OOD}} = 0.3$  
-• $\alpha_{\text{PH}} = 0.3$  
-• $\alpha_{A} = 0.75$  
-• $\alpha_{S} = 0.25$  
-• $\text{SpeedUpMax} = 10000$
+• $\alpha_{\text{test}} = 0.33$  
+• $\alpha_{\text{ood}} = 0.33$  
+• $\alpha_{\text{speed-up}} = 0.34$  
+• $\alpha_{ML} = 0.6$  
+• $\alpha_{Physics} = 0.4$  
+• $\text{SpeedUpMax} = 50$
 
-In order to illustrate even further how the score computation works, we provide in Table 2 examples for the airfoil task.
+In order to illustrate even further how the score computation works, we provide in Table 2 examples for the load flow prediction task.
 
-As it is the most straightforward to compute, we start with the global score for the solution obtained with 'OpenFOAM', the physical solver used to produce the data. It is the reference physical solver, which implies that the accuracy is perfect but the speed-up is only equal to 1 (no acceleration). Therefore, we obtain the following subscores:
+As it is the most straightforward to compute, we start with the global score for the solution obtained with 'Grid2Op', the physical solver used to produce the data. It is the reference physical solver, which implies that the accuracy is perfect but the speed-up is lower than the expctation. For illustration purpose, we use the speedup obtained by security analysis (explained in the begining of [Notebook 5](5_Scoring.ipynb)) which was $3.7$ faster than the Grid2op solver. Therefore, we obtain the following subscores:
 
-• $Score_{ML} = 0.75 \times \left(\frac{2 \times 5}{2 \times 5}\right) + 0.25 \times 0 = 0.75$  
-• $Score_{OOD} = 0.75 \times \left(\frac{2 \times 9}{2 \times 9}\right) + 0.25 \times 0 = 0.75$  
-• ${Score}_{PH} = \frac{2 \times 4}{2 \times 4} = 1$
+- $Score_{test} = 0.6 \times \left(\frac{2 \times 6}{2 \times 6}\right) + 0.4 \times \left(\frac{2 \times 8}{2 \times 8}\right) = 1$
+- $Score_{ood} = 0.6 \times \left(\frac{2 \times 6}{2 \times 6}\right) + 0.4 \times \left(\frac{2 \times 8}{2 \times 8}\right) = 1$
+- $Score_{speedup} = \frac{\log_{10}(3.77)}{\log_{10}(50)}=0.33$
 
-Then, by combining them, the global score is $Score_{OpenFOAM} = 0.4 \times 0.75 + 0.3 \times 0.75 + 0.3 \times 1 = 0.825$, therefore 82.5%.
+Then, by combining them, the global score is $Score_{PhysicsSolver} = 0.33 \times 1 + 0.33 \times 1 + 0.34 \times 0.33 = 0.77$, therefore 77%.
 
-The procedure is similar with 'FC'; the associated subscores are:
+The procedure is similar with LeapNet architecture. The associated subscores are:
 
-• $Score_{ML} = 0.75 \times \left(\frac{2 \times 3+1}{2 \times 5}\right) + 0.25 \times \frac{\log_{10}(1300)}{\log_{10}(10000)} \approx 0.719$  
-• $Score_{OOD} = 0.75 \times \left(\frac{5}{2 \times 9}\right) + 0.25 \times \frac{\log_{10}(1300)}{\log_{10}(10000)} \approx 0.402$  
-• $Score_{PH} = \frac{1}{2 \times 4} = 0.125$
+- $Score_{test} = 0.6 \times \left(\frac{2 \times 4 + 0 \times 2}{2 \times 6}\right) + 0.4 \times \left(\frac{2 \times 3 + 1 \times 1 + 0 \times 4}{2 \times 8}\right) = 0.57$
+- $Score_{ood} = 0.6 \times \left(\frac{2 \times 4 + 0 \times 2}{2 \times 6}\right) + 0.4 \times \left(\frac{2 \times 3 + 0 \times 5}{2 \times 8}\right) = 0.55$
+- $Score_{speedup} = \frac{\log_{10}(2.58)}{\log_{10}(50)}=0.24$
 
-Then, by combining them, the global score is $Score_{OpenFOAM} = 0.4 \times 0.719 + 0.3 \times 0.402 + 0.3 \times 0.125 = 0.4457$, therefore 44.57%.
+Then, by combining them, the global score is $Score_{LeapNet} = 0.33 \times 0.57 + 0.33 \times 0.55 + 0.34 \times 0.24 = 0.45$, therefore 45%.
 
-Table 1: Scoring Table for the 3 tasks under 3 categories of evaluation criteria for the considered configuration. The performances are reported using three colors computed on the basis of two thresholds. Colors meaning: <img  src="https://i.ibb.co/mSGvCjR/red-Cercle.png" width="auto" height="20">Unacceptable<img  src="https://i.ibb.co/TrtxjZm/orange-Cercle.png" width="auto" height="20">Acceptable <img  src="https://i.ibb.co/028cH71/green-Cercle.png" width="auto" height="20">Great.
+![Comparison Table](./img/Benchmark_table.png)
+

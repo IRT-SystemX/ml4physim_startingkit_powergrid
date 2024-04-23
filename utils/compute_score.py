@@ -2,11 +2,12 @@ import math
 # from lips import get_root_path
 # from lips.config import ConfigManager
 from lips.metrics.power_grid.compute_solver_time import compute_solver_time
+from lips.metrics.power_grid.compute_solver_time_grid2op import compute_solver_time_grid2op
 
-thresholds={"a_or":(0.05,0.10,"min"),
-            "a_ex":(0.05,0.10,"min"),
-            "p_or":(0.05,0.10,"min"),
-            "p_ex":(0.05,0.10,"min"),
+thresholds={"a_or":(0.02,0.05,"min"),
+            "a_ex":(0.02,0.05,"min"),
+            "p_or":(0.02,0.05,"min"),
+            "p_ex":(0.02,0.05,"min"),
             "v_or":(0.2,0.5,"min"),
             "v_ex":(0.2,0.5,"min"),
             "CURRENT_POS":(1., 5.,"min"),
@@ -20,9 +21,9 @@ thresholds={"a_or":(0.05,0.10,"min"),
            }
 
 configuration={
-    "coefficients":{"test":0.33, "test_ood":0.33, "speed_up":0.34},
-    "test_ratio":{"ml": 0.6, "physics":0.4},
-    "test_ood_ratio":{"ml": 0.6, "physics":0.4},
+    "coefficients":{"test":0.3, "test_ood":0.3, "speed_up":0.4},
+    "test_ratio":{"ml": 0.66, "physics":0.34},
+    "test_ood_ratio":{"ml": 0.66, "physics":0.34},
     "value_by_color":{"g":2,"o":1,"r":0},
     "max_speed_ratio_allowed":50
 }
@@ -38,7 +39,8 @@ def evaluate_model(benchmark, model):
     return metrics
 
 def compute_speed_up(config, metrics):
-    solver_time = compute_solver_time(nb_samples=int(1e5), config=config)
+    # solver_time = compute_solver_time(nb_samples=int(1e5), config=config)
+    solver_time = compute_solver_time_grid2op(config_path=config.path_config, benchmark_name=config.section_name, nb_samples=int(1e5))
     speed_up = solver_time / metrics["test"]["ML"]["TIME_INF"]
     return speed_up
 
@@ -49,8 +51,8 @@ def reconstruct_metric_dict(metrics, dataset: str="test"):
     
     rec_metrics["ML"]["a_or"] = metrics[dataset]["ML"]["MAPE_90_avg"]["a_or"]
     rec_metrics["ML"]["a_ex"] = metrics[dataset]["ML"]["MAPE_90_avg"]["a_ex"]
-    rec_metrics["ML"]["p_or"] = metrics[dataset]["ML"]["MAPE_90_avg"]["p_or"]
-    rec_metrics["ML"]["p_ex"] = metrics[dataset]["ML"]["MAPE_90_avg"]["p_ex"]
+    rec_metrics["ML"]["p_or"] = metrics[dataset]["ML"]["MAPE_10_avg"]["p_or"]
+    rec_metrics["ML"]["p_ex"] = metrics[dataset]["ML"]["MAPE_10_avg"]["p_ex"]
     rec_metrics["ML"]["v_or"] = metrics[dataset]["ML"]["MAE_avg"]["v_or"]
     rec_metrics["ML"]["v_ex"] = metrics[dataset]["ML"]["MAE_avg"]["v_ex"]
 

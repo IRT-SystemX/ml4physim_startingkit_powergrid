@@ -1,4 +1,5 @@
 import math
+import numpy as np
 # from lips import get_root_path
 # from lips.config import ConfigManager
 from lips.metrics.power_grid.compute_solver_time import compute_solver_time
@@ -59,7 +60,7 @@ def reconstruct_metric_dict(metrics, dataset: str="test"):
     rec_metrics["Physics"]["CURRENT_POS"]     = metrics[dataset]["Physics"]["CURRENT_POS"]["a_or"]["Violation_proportion"] * 100.
     rec_metrics["Physics"]["VOLTAGE_POS"]     = metrics[dataset]["Physics"]["VOLTAGE_POS"]["v_or"]["Violation_proportion"] * 100.
     rec_metrics["Physics"]["LOSS_POS"]        = metrics[dataset]["Physics"]["LOSS_POS"]["violation_proportion"] * 100.
-    rec_metrics["Physics"]["DISC_LINES"]      = metrics[dataset]["Physics"]["DISC_LINES"]["violation_proportion"] * 100
+    rec_metrics["Physics"]["DISC_LINES"]      = metrics[dataset]["Physics"]["DISC_LINES"]["violation_proportion"] * 100.
     rec_metrics["Physics"]["CHECK_LOSS"]      = metrics[dataset]["Physics"]["CHECK_LOSS"]["violation_percentage"]
     rec_metrics["Physics"]["CHECK_GC"]        = metrics[dataset]["Physics"]["CHECK_GC"]["violation_percentage"]
     rec_metrics["Physics"]["CHECK_LC"]        = metrics[dataset]["Physics"]["CHECK_LC"]["violation_percentage"]
@@ -91,8 +92,22 @@ def discretize_results(metrics):
             results[subcategoryName].append(accuracyEval)
     return results
 
-def SpeedMetric(speedUp,speedMax):
-    return max(min(math.log10(speedUp)/math.log10(speedMax),1),0)
+# def SpeedMetric(speedUp,speedMax):
+#     return max(min(math.log10(speedUp)/math.log10(speedMax),1),0)
+
+def quadratic_function(x, a, b, c, k):
+    if x == 1.:
+        return 0.
+    else:
+        return a*(x**2) + b*x + c + np.log10(k*x)
+
+def SpeedMetric(speedUp, speedMax):
+    a=0.01 # 0.01
+    b=0.5 #0.5
+    c=0.1 #0.1
+    k=9
+    res = quadratic_function(speedUp, a=a, b=b, c=c, k=k) / quadratic_function(speedMax, a=a, b=b, c=c, k=k)
+    return max(min(res, 1), 0)
 
 def compute_ml_subscore(results, key: str="test_ratio"):
     test_ratio = configuration[key]

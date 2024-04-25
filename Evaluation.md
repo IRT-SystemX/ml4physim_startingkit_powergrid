@@ -85,11 +85,15 @@ where $\alpha_{ML}$ and $\alpha_{Physics}$ are the coefficients to calibrate the
 
 
 ### <span style="color: blue;">$Score_{Speed-up}$</span>
-For the speed-up criteria, we calibrate the score using the $log10$ function by using an adequate threshold of maximum speed-up to be reached for the task, meaning
-
+For the speed-up criteria, we calibrate the score using a quadratic function by using an adequate threshold of maximum speed-up to be reached for the task, meaning
 <div align="center">
-$$Score_{Speed}= \min \left(\frac{\log_{10}(SpeedUp)}{\log_{10}(SpeedUpMax)}, 1\right)$$
+$$Score_{Speed} = \min \left(\frac{a\times SpeedUp^2 + b\times SpeedUp + c + \log{10}(k\times SpeedUp)}{a\times SpeedUpMax^2 + b\times SpeedUpMax + c + \log{10}(k\times SpeedUpMax)}, 1\right)$$
 </div>
+<!--$log10$ function by using an adequate threshold of maximum speed-up to be reached for the task, meaning-->
+
+<!--<div align="center">
+$$Score_{Speed}= \min \left(\frac{\log_{10}(SpeedUp)}{\log_{10}(SpeedUpMax)}, 1\right)$$
+</div>-->
 where  
 • $SpeedUp$ is given by
 <div align="center">
@@ -109,30 +113,35 @@ rejected. Thus, it would be equivalent to a null global score.
 
 Using the notation introduced in the previous subsection, let us consider the following configuration:
 
-• $\alpha_{\text{test}} = 0.33$  
-• $\alpha_{\text{ood}} = 0.33$  
-• $\alpha_{\text{speed-up}} = 0.34$  
-• $\alpha_{ML} = 0.6$  
-• $\alpha_{Physics} = 0.4$  
-• $\text{SpeedUpMax} = 50$
+- $\alpha_{\text{test}} = 0.3$  
+- $\alpha_{\text{ood}} = 0.3$  
+- $\alpha_{\text{speed-up}} = 0.4$  
+- $\alpha_{ML} = 0.66$  
+- $\alpha_{Physics} = 0.34$  
+- $\text{SpeedUpMax} = 50$
+- $a=0.01, b=0.5, c=0.1, k=9$
 
 In order to illustrate even further how the score computation works, we provide in Table 2 examples for the load flow prediction task.
 
 As it is the most straightforward to compute, we start with the global score for the solution obtained with 'Grid2Op', the physical solver used to produce the data. It is the reference physical solver, which implies that the accuracy is perfect but the speed-up is lower than the expctation. For illustration purpose, we use the speedup obtained by security analysis (explained in the begining of [Notebook 5](5_Scoring.ipynb)) which was $3.7$ faster than the Grid2op solver. Therefore, we obtain the following subscores:
 
-- $Score_{test} = 0.6 \times \left(\frac{2 \times 6}{2 \times 6}\right) + 0.4 \times \left(\frac{2 \times 8}{2 \times 8}\right) = 1$
-- $Score_{ood} = 0.6 \times \left(\frac{2 \times 6}{2 \times 6}\right) + 0.4 \times \left(\frac{2 \times 8}{2 \times 8}\right) = 1$
-- $Score_{speedup} = \frac{\log_{10}(3.77)}{\log_{10}(50)}=0.33$
+- $Score_{test} = 0.66 \times \left(\frac{2 \times 6}{2 \times 6}\right) + 0.34 \times \left(\frac{2 \times 8}{2 \times 8}\right) = 1$
 
-Then, by combining them, the global score is $Score_{PhysicsSolver} = 0.33 \times 1 + 0.33 \times 1 + 0.34 \times 0.33 = 0.77$, therefore 77%.
+- $Score_{ood} = 0.66 \times \left(\frac{2 \times 6}{2 \times 6}\right) + 0.34 \times \left(\frac{2 \times 8}{2 \times 8}\right) = 1$
+
+- $Score_{speedup} = \frac{0.01 \times 3.77^2 + 0.5 \times 3.77 + 0.1 + \log_{10}(9\times 3.77)}{0.01 \times 50^2 + 0.5 \times 50 + 0.1 + \log_{10}(9\times 50)}=0.069$
+
+Then, by combining them, the global score is $Score_{PhysicsSolver} = 0.3 \times 1 + 0.3 \times 1 + 0.4 \times 0.069 = 0.627$, therefore 62.7%.
 
 The procedure is similar with LeapNet architecture. The associated subscores are:
 
-- $Score_{test} = 0.6 \times \left(\frac{2 \times 4 + 0 \times 2}{2 \times 6}\right) + 0.4 \times \left(\frac{2 \times 3 + 1 \times 1 + 0 \times 4}{2 \times 8}\right) = 0.57$
-- $Score_{ood} = 0.6 \times \left(\frac{2 \times 4 + 0 \times 2}{2 \times 6}\right) + 0.4 \times \left(\frac{2 \times 3 + 0 \times 5}{2 \times 8}\right) = 0.55$
-- $Score_{speedup} = \frac{\log_{10}(2.58)}{\log_{10}(50)}=0.24$
+- $Score_{test} = 0.66 \times \left(\frac{2 \times 2 + 1 \times 2 + 0 \times 2}{2 \times 6}\right) + 0.34 \times \left(\frac{2 \times 2 + 1 \times 1 + 0 \times 5}{2 \times 8}\right) = 0.44$
 
-Then, by combining them, the global score is $Score_{LeapNet} = 0.33 \times 0.57 + 0.33 \times 0.55 + 0.34 \times 0.24 = 0.45$, therefore 45%.
+- $Score_{ood} = 0.66 \times \left(\frac{2 \times 0 + 1 \times 4 + 0 \times 2}{2 \times 6}\right) + 0.34 \times \left(\frac{2 \times 2 + 1 \times 1 + 0 \times 5}{2 \times 8}\right) = 0.33$
 
-![Comparison Table](./img/Benchmark_table.png)
+- $Score_{speedup} = \frac{0.01 \times 11.9^2 + 0.5 \times 11.9 + 0.1 + \log_{10}(9\times 11.9)}{0.01 \times 50^2 + 0.5 \times 50 + 0.1 + \log_{10}(9\times 50)}=0.18$
+
+Then, by combining them, the global score is $Score_{LeapNet} = 0.3 \times 0.44 + 0.3 \times 0.33 + 0.4 \times 0.18 = 0.30$, therefore 30%.
+
+![Comparison Table](./img/Benchmark_table_new.png)
 

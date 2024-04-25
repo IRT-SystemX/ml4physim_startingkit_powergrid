@@ -13,20 +13,21 @@ For each above mentioned category, specific criteria related to the power grid l
 
 ### ML criteria
 It should be noted the following metrics are used to evalute the accuracy for the various output variabels:
-- MAPE90: the MAPE criteria computed on %10 highest quantile of the distribution (used for currents and powers);
+- MAPE90: the MAPE criteria computed on %10 highest quantile of the distribution (used for currents);
+- MAPE10: the MAPE criteria computed on %90 highest quantile of the distribution, allowing to the MAPE criterai explosion due to zero values (used for powers); 
 - MAE: mean absolute error (used for voltages). 
 
 ### Physics compliance criteria
 Various metrics are provided to examine the physics compliance of proposed solutions:
 
-- Current Positivity: Proportion of negative current $\frac{1}{L}\sum_\ell^L 1_{(\hat{a}^\ell_{or,ex} < 0.)}$
-- Voltage Positivity: Proportion of negative voltages $\frac{1}{L}\sum_\ell^L 1_{(\hat{v}^\ell_{or,ex} < 0.)}$
-- Losses Positivity: Proportion of negative energy losses $\frac{1}{L}\sum_\ell^L 1_{(\hat{p}^\ell_{ex} + \hat{p}^\ell_{or} < 0.)}$
-- Disconnected lines: Proportion of non-null $a,p$ values for disconnected power lines $\frac{1}{L_{disc}}\sum_{\ell_{disc}}^{L_{disc}} 1_{(\lvert\hat{x}^\ell_{ex}\rvert + \lvert\hat{x}^\ell_{or}\rvert > 0.)}$
-- Energy Loss: energy losses range consistency $\frac{\sum_{\ell=1}^L (\hat{p}^\ell_{ex} + \hat{p}^\ell_{or})}{Gen} \in [0.005,0.04]$
-- Global Conservation: Mean energy losses residual MAPE($(Prod - Load) -  (\sum_{\ell=1}^L (\hat{p}^\ell_{ex} + \hat{p}^\ell_{or}))$)
-- Local Conservation: Mean active power residual at nodes MAPE($(p_k^{prod} - p_k^{load}) - (\sum_{l \in neig(k)} \hat{p}^\ell_k)$)
-- Joule Law: MAPE($\sum_{\ell=1}^L (\hat{p}^\ell_{ex} + \hat{p}^\ell_{or}) - R \times \frac{\sum_{\ell=1}^L (\hat{a}^\ell_{ex} + \hat{a}^\ell_{or})}{2} $)
+- $P_1$ : Current Positivity: Proportion of negative current $\frac{1}{L}\sum_\ell^L 1_{(\hat{a}^\ell_{or,ex} < 0.)}$
+- $P_2$ : Voltage Positivity: Proportion of negative voltages $\frac{1}{L}\sum_\ell^L 1_{(\hat{v}^\ell_{or,ex} < 0.)}$
+- $P_3$ :Losses Positivity: Proportion of negative energy losses $\frac{1}{L}\sum_\ell^L 1_{(\hat{p}^\ell_{ex} + \hat{p}^\ell_{or} < 0.)}$
+- $P_4$ :Disconnected lines: Proportion of non-null $a,p$ values for disconnected power lines $\frac{1}{L_{disc}}\sum_{\ell_{disc}}^{L_{disc}} 1_{(\lvert\hat{x}^\ell_{ex}\rvert + \lvert\hat{x}^\ell_{or}\rvert > 0.)}$
+- $P_5$ :Energy Loss: energy losses range consistency $\frac{\sum_{\ell=1}^L (\hat{p}^\ell_{ex} + \hat{p}^\ell_{or})}{Gen} \in [0.005,0.04]$
+- $P_6$ :Global Conservation: Mean energy losses residual MAPE($(Prod - Load) -  (\sum_{\ell=1}^L (\hat{p}^\ell_{ex} + \hat{p}^\ell_{or}))$)
+- $P_7$ :Local Conservation: Mean active power residual at nodes MAPE($(p_k^{prod} - p_k^{load}) - (\sum_{l \in neig(k)} \hat{p}^\ell_k)$)
+- $P_8$ :Joule Law: MAPE($\sum_{\ell=1}^L (\hat{p}^\ell_{ex} + \hat{p}^\ell_{or}) - R \times \frac{\sum_{\ell=1}^L (\hat{a}^\ell_{ex} + \hat{a}^\ell_{or})}{2} $)
 
 ## Practical computation of score
 To evaluate properly the above mentioned evaluation criteria categories, in this competition, two test datasets are provided: 

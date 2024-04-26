@@ -90,6 +90,10 @@ For the speed-up criteria, we calibrate the score using a quadratic function by 
 <div align="center">
 $$Score_{Speed} = \min \left(\frac{a\times SpeedUp^2 + b\times SpeedUp + c + \log{10}(k\times SpeedUp)}{a\times SpeedUpMax^2 + b\times SpeedUpMax + c + \log{10}(k\times SpeedUpMax)}, 1\right)$$
 </div>
+
+The $Score_{Speed} curve has the following shape:
+![Comparison Table](./img/Speedup_shape.png)
+
 <!--$log10$ function by using an adequate threshold of maximum speed-up to be reached for the task, meaning-->
 
 <!--<div align="center">

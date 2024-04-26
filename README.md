@@ -3,7 +3,7 @@ This starting kit provides a set of jupyter notebooks helping the challenge part
 
 Data
 ----
-A demo version of the usecase datasets is provided in `input_data_local` for 3 different scales of Power Grid environments. Two environments `lips_case14_sandbox` and `lips_neurips_2020_track1_small` includes 14 and 38 nodes respectively and provided for participants to test (optional) their solution. Environment `lips_idf_2023` is the challenge environment. All the final solutions (which are submitted on codabench) should be trained and evaluated on this environment. See the description of provided jupyter notebooks below to see how to use and import these datasets.
+⚠️ A demo version of the usecase datasets is provided in `input_data_local` for 3 different scales of Power Grid environments. Two environments `lips_case14_sandbox` and `lips_neurips_2020_track1_small` includes 14 and 38 nodes respectively and provided for participants to test (optional) their solution. Environment `lips_idf_2023` is the challenge environment. All the final solutions (which are submitted on codabench) should be trained and evaluated on this environment. See the description of provided jupyter notebooks below to see how to use and import these datasets.
 
 A `configs` folder is provided which includes the configurations (parameters) related to benchmarks and augmented simulators (aka models). The users could change the simulators configurations to change the hyperparameter of existing models. More details on how to use these configs is provided in the notebooks.
 

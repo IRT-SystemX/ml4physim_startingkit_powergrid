@@ -95,18 +95,26 @@ def discretize_results(metrics):
 # def SpeedMetric(speedUp,speedMax):
 #     return max(min(math.log10(speedUp)/math.log10(speedMax),1),0)
 
+# def SpeedMetric(speedUp, speedMax):
+#     a=0.01 # 0.01
+#     b=0.5 #0.5
+#     c=0.1 #0.1
+#     k=9
+#     res = quadratic_function(speedUp, a=a, b=b, c=c, k=k) / quadratic_function(speedMax, a=a, b=b, c=c, k=k)
+#     return max(min(res, 1), 0)
+
 def quadratic_function(x, a, b, c, k):
     if x == 1.:
         return 0.
     else:
         return a*(x**2) + b*x + c + np.log10(k*x)
+    
+def weibull(c,b,x):
+    a = c * ((-np.log(0.9)) ** (-1/b))
+    return 1. - np.exp(-(x / a)**b)
 
 def SpeedMetric(speedUp, speedMax):
-    a=0.01 # 0.01
-    b=0.5 #0.5
-    c=0.1 #0.1
-    k=9
-    res = quadratic_function(speedUp, a=a, b=b, c=c, k=k) / quadratic_function(speedMax, a=a, b=b, c=c, k=k)
+    res = weibull(5, 1.7, speedUp)
     return max(min(res, 1), 0)
 
 def compute_ml_subscore(results, key: str="test_ratio"):

@@ -86,13 +86,20 @@ where $\alpha_{ML}$ and $\alpha_{Physics}$ are the coefficients to calibrate the
 
 
 ### <span style="color: blue;">$Score_{Speed-up}$</span>
-For the speed-up criteria, we calibrate the score using a quadratic function by using an adequate threshold of maximum speed-up to be reached for the task, meaning
+For the speed-up criteria, we calibrate the score using a Weibull "stretched exponential" function as follows:
+
 <div align="center">
-$$Score_{Speed} = \min \left(\frac{a\times SpeedUp^2 + b\times SpeedUp + c + \log{10}(k\times SpeedUp)}{a\times SpeedUpMax^2 + b\times SpeedUpMax + c + \log{10}(k\times SpeedUpMax)}, 1\right)$$
+$$Score_{Speed} = \min \left(1. - e^{-(\frac{x}{a})}^b , 1\right)$$  with $a = c\times(-\ln 0.9)^{-1/b}$ and $b=1.7, c=5$
 </div>
 
-The $Score_{Speed} curve has the following shape:
-![Comparison Table](./img/Speedup_shape.png)
+
+The $Score_{Speed}$ curve has the following shape:
+![Comparison Table](./img/Speedup_shape_weibull.png)
+
+<!-- <div align="center">
+$$Score_{Speed} = \min \left(\frac{a\times SpeedUp^2 + b\times SpeedUp + c + \log{10}(k\times SpeedUp)}{a\times SpeedUpMax^2 + b\times SpeedUpMax + c + \log{10}(k\times SpeedUpMax)}, 1\right)$$
+</div> -->
+
 
 <!--$log10$ function by using an adequate threshold of maximum speed-up to be reached for the task, meaning-->
 
@@ -123,8 +130,9 @@ Using the notation introduced in the previous subsection, let us consider the fo
 - $\alpha_{\text{speed-up}} = 0.4$  
 - $\alpha_{ML} = 0.66$  
 - $\alpha_{Physics} = 0.34$  
-- $\text{SpeedUpMax} = 50$
-- $a=0.01, b=0.5, c=0.1, k=9$
+- $b=1.7, c=5$
+<!-- - $\text{SpeedUpMax} = 50$
+- $a=0.01, b=0.5, c=0.1, k=9$-->
 
 In order to illustrate even further how the score computation works, we provide in Table 2 examples for the load flow prediction task.
 
@@ -134,9 +142,11 @@ As it is the most straightforward to compute, we start with the global score for
 
 - $Score_{ood} = 0.66 \times \left(\frac{2 \times 6}{2 \times 6}\right) + 0.34 \times \left(\frac{2 \times 8}{2 \times 8}\right) = 1$
 
-- $Score_{speedup} = \frac{0.01 \times 3.77^2 + 0.5 \times 3.77 + 0.1 + \log_{10}(9\times 3.77)}{0.01 \times 50^2 + 0.5 \times 50 + 0.1 + \log_{10}(9\times 50)}=0.069$
+- $Score_{speedup} = 1 - e^{-(\frac{3.77}{18.78})}^1.7 = 0.06$
 
-Then, by combining them, the global score is $Score_{PhysicsSolver} = 0.3 \times 1 + 0.3 \times 1 + 0.4 \times 0.069 = 0.627$, therefore 62.7%.
+<!-- - $Score_{speedup} = \frac{0.01 \times 3.77^2 + 0.5 \times 3.77 + 0.1 + \log_{10}(9\times 3.77)}{0.01 \times 50^2 + 0.5 \times 50 + 0.1 + \log_{10}(9\times 50)}=0.069$-->
+
+Then, by combining them, the global score is $Score_{PhysicsSolver} = 0.3 \times 1 + 0.3 \times 1 + 0.4 \times 0.06 = 0.625$, therefore 62.5%.
 
 The procedure is similar with LeapNet architecture. The associated subscores are:
 
@@ -144,9 +154,11 @@ The procedure is similar with LeapNet architecture. The associated subscores are
 
 - $Score_{ood} = 0.66 \times \left(\frac{2 \times 0 + 1 \times 4 + 0 \times 2}{2 \times 6}\right) + 0.34 \times \left(\frac{2 \times 2 + 1 \times 1 + 0 \times 5}{2 \times 8}\right) = 0.33$
 
-- $Score_{speedup} = \frac{0.01 \times 11.9^2 + 0.5 \times 11.9 + 0.1 + \log_{10}(9\times 11.9)}{0.01 \times 50^2 + 0.5 \times 50 + 0.1 + \log_{10}(9\times 50)}=0.18$
+- $Score_{speedup} = 1 - e^{-(\frac{11.9}{18.78})}^{1.7} = 0.36$
 
-Then, by combining them, the global score is $Score_{LeapNet} = 0.3 \times 0.44 + 0.3 \times 0.33 + 0.4 \times 0.18 = 0.30$, therefore 30%.
+<!-- - $Score_{speedup} = \frac{0.01 \times 11.9^2 + 0.5 \times 11.9 + 0.1 + \log_{10}(9\times 11.9)}{0.01 \times 50^2 + 0.5 \times 50 + 0.1 + \log_{10}(9\times 50)}=0.18$-->
+
+Then, by combining them, the global score is $Score_{LeapNet} = 0.3 \times 0.44 + 0.3 \times 0.33 + 0.4 \times 0.36 = 0.376$, therefore 37.6%.
 
 ![Comparison Table](./img/Benchmark_table_new.png)
 

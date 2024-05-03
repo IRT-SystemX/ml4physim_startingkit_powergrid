@@ -81,10 +81,11 @@ where $\alpha_{ML}$ and $\alpha_{Physics}$ are the coefficients to calibrate the
 ### <span style="color: blue;">$Score_{Speed-up}$</span>
 For the speed-up criteria, we calibrate the score using a Weibull "stretched exponential" function as follows:
 
-$ Score_{Speed} = \min \left(1. - exp((-\frac{x}{a})^b) , 1\right)\quad \text{with}\ \  a = c\times(-\ln 0.9)^{-1/b}\quad \text{and}\quad b=1.7, c=5$
+$Score_{Speed} = \min \left(1. - exp((-\frac{x}{a})^b) , 1\right)\quad \text{with}\ \  a = c\times(-\ln 0.9)^{-1/b}\quad \text{and}\quad b=1.7, c=5$
 
 The $Score_{Speed}$ curve has the following shape:
-![Comparison Table](./img/Speedup_shape_weibull.png)
+
+![Score shape](./img/Speedup_shape_weibull.png)
 
 <!-- <div align="center">
 $$Score_{Speed} = \min \left(\frac{a\times SpeedUp^2 + b\times SpeedUp + c + \log{10}(k\times SpeedUp)}{a\times SpeedUpMax^2 + b\times SpeedUpMax + c + \log{10}(k\times SpeedUpMax)}, 1\right)$$

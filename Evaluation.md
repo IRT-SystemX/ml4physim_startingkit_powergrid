@@ -38,9 +38,7 @@ The *ML-related* (accuracy measures) and *Physical compliance* criteria are comp
 
 Hence, the global score is calculated based on a linear combination formula of the above evaluation criteria categories on these datasets:
 
-<div align="center">
 $$\text{Score} = \alpha_{test}× \text{Score}_{{test}} + \alpha_{ood} × \text{Score}_{{OOD}} + \alpha_{speed-up} × \text{Score}_{speed-up}$$
-</div>
 
 where $\alpha_{test}$, $\alpha_{ood}$, and $\alpha_{speed-up}$ are the coefficients to calibrate the relative importance related to metrics computed on test, out-of-distribution test dataset and speed-up wrt the physical solver obtained using the test dataset.
 
@@ -50,9 +48,8 @@ We explain in the following how to calculate each of the three sub-scores.
 
 This sub-score is calculated based on a linear combination of 2 categories, namely: *ML-related* and *Physics compliance*.
 
-<div align="center">
 $$\text{Score}_{{test}} = \alpha_{ML} × \text{Score}_{{ML}} + \alpha_{Physics} × \text{Score}_{{Physics}}$$
-</div>
+
 where $\alpha_{ML}$ and $\alpha_{Physics}$ are the coefficients to calibrate the relative importance of ML-related and Physics compliance categories respectively for test dataset.
 
 
@@ -65,9 +62,7 @@ For each quantity of interest, the ML-related sub-score is calculated based on t
 
 Let also $N$, given by $N = Nr + No + Ng$.The score expression is given by:
 
-<div align="center">
 $$\text{Score}_{{ML}} = \frac{1}{2N} (2 \times Ng + 1 \times No + 0 \times Nr)$$
-</div>
 
 A perfect score is obtained if all the given quantities provide great results. Indeed, we would have $N = Ng$ and $Nr = No = 0$ which implies $Score_{ML} = 1$.
 
@@ -78,9 +73,7 @@ For Physics compliance score $Score_{Physics}$, the score is also calibrated bas
 ### <span style="color: blue;">$Score_{OOD}$</span>
 Exactly the same procedure as above for computation of $Score_{test}$ is used to compute the score on the out-of-distribution dataset using two evaluation categories which are : *ML-related* and *Physics compliance*. Hence, the ood $Score_{OOD}$ is obtained by:
 
-<div align="center">
-$$\text{Score}_{{OOD}} = \alpha_{ML} × \text{Score}_{{ML}} + \alpha_{Physics} × \text{Score}_{{Physics}}$$
-</div>
+$\text{Score}_{{OOD}} = \alpha_{ML} × \text{Score}_{{ML}} + \alpha_{Physics} × \text{Score}_{{Physics}}$
 
 where $\alpha_{ML}$ and $\alpha_{Physics}$ are the coefficients to calibrate the relative importance of ML-related and Physics compliance categories respectively for out-of-distribution test dataset.
 
@@ -88,10 +81,7 @@ where $\alpha_{ML}$ and $\alpha_{Physics}$ are the coefficients to calibrate the
 ### <span style="color: blue;">$Score_{Speed-up}$</span>
 For the speed-up criteria, we calibrate the score using a Weibull "stretched exponential" function as follows:
 
-<div align="center">
-$$Score_{Speed} = \min \left(1. - e^{-(\frac{x}{a})}^b , 1\right)$$  with $a = c\times(-\ln 0.9)^{-1/b}$ and $b=1.7, c=5$
-</div>
-
+$ Score_{Speed} = \min \left(1. - exp((-\frac{x}{a})^b) , 1\right)\quad \text{with}\ \  a = c\times(-\ln 0.9)^{-1/b}\quad \text{and}\quad b=1.7, c=5$
 
 The $Score_{Speed}$ curve has the following shape:
 ![Comparison Table](./img/Speedup_shape_weibull.png)
@@ -108,9 +98,8 @@ $$Score_{Speed}= \min \left(\frac{\log_{10}(SpeedUp)}{\log_{10}(SpeedUpMax)}, 1\
 </div>-->
 where  
 • $SpeedUp$ is given by
-<div align="center">
-$$Score_{SpeedUp}= \frac{time_{ClassicalSolver}}{time_{Inference}}$$
-</div>  
+$Score_{SpeedUp}= \frac{time_{ClassicalSolver}}{time_{Inference}}$
+
 • $SpeedUpMax$ is the maximal speed up allowed for the load flow prediction
 • $time_{ClassicalSolver}$, the elapsed time to solve the physical problem using the classical solver  
 • $time_{Inference}$, the inference time obtained by the submitted solutions
@@ -142,7 +131,7 @@ As it is the most straightforward to compute, we start with the global score for
 
 - $Score_{ood} = 0.66 \times \left(\frac{2 \times 6}{2 \times 6}\right) + 0.34 \times \left(\frac{2 \times 8}{2 \times 8}\right) = 1$
 
-- $Score_{speedup} = 1 - e^{-(\frac{3.77}{18.78})}^1.7 = 0.06$
+- $Score_{speedup} = 1 - exp(-\frac{3.77}{18.78})^{1.7} = 0.06$
 
 <!-- - $Score_{speedup} = \frac{0.01 \times 3.77^2 + 0.5 \times 3.77 + 0.1 + \log_{10}(9\times 3.77)}{0.01 \times 50^2 + 0.5 \times 50 + 0.1 + \log_{10}(9\times 50)}=0.069$-->
 
@@ -154,11 +143,11 @@ The procedure is similar with LeapNet architecture. The associated subscores are
 
 - $Score_{ood} = 0.66 \times \left(\frac{2 \times 0 + 1 \times 4 + 0 \times 2}{2 \times 6}\right) + 0.34 \times \left(\frac{2 \times 2 + 1 \times 1 + 0 \times 5}{2 \times 8}\right) = 0.33$
 
-- $Score_{speedup} = 1 - e^{-(\frac{11.9}{18.78})}^{1.7} = 0.36$
+- $Score_{speedup} = 1 - exp(-\frac{11.9}{18.78})^{1.7} = 0.36$
 
 <!-- - $Score_{speedup} = \frac{0.01 \times 11.9^2 + 0.5 \times 11.9 + 0.1 + \log_{10}(9\times 11.9)}{0.01 \times 50^2 + 0.5 \times 50 + 0.1 + \log_{10}(9\times 50)}=0.18$-->
 
 Then, by combining them, the global score is $Score_{LeapNet} = 0.3 \times 0.44 + 0.3 \times 0.33 + 0.4 \times 0.36 = 0.376$, therefore 37.6%.
 
-![Comparison Table](./img/Benchmark_table_new.png)
+![Comparison Table](./img/Benchmark_table.png)
 

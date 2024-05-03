@@ -1,7 +1,4 @@
 import math
-import numpy as np
-# from lips import get_root_path
-# from lips.config import ConfigManager
 from lips.metrics.power_grid.compute_solver_time import compute_solver_time
 from lips.metrics.power_grid.compute_solver_time_grid2op import compute_solver_time_grid2op
 
@@ -107,13 +104,13 @@ def quadratic_function(x, a, b, c, k):
     if x == 1.:
         return 0.
     else:
-        return a*(x**2) + b*x + c + np.log10(k*x)
+        return a*(x**2) + b*x + c + math.log10(k*x)
     
 def weibull(c,b,x):
-    a = c * ((-np.log(0.9)) ** (-1/b))
-    return 1. - np.exp(-(x / a)**b)
+    a = c * ((-math.log(0.9)) ** (-1/b))
+    return 1. - math.exp(-(x / a)**b)
 
-def SpeedMetric(speedUp, speedMax):
+def SpeedMetric(speedUp):
     res = weibull(5, 1.7, speedUp)
     return max(min(res, 1), 0)
 
@@ -150,7 +147,7 @@ def compute_global_score(metrics, config):
     test_ood_subscore = test_ood_ml_subscore + test_ood_physics_subscore
 
     speed_up = compute_speed_up(config, metrics)
-    speedup_score = SpeedMetric(speedUp=speed_up, speedMax=max_speed_ratio_allowed)
+    speedup_score = SpeedMetric(speedUp=speed_up)
 
     globalScore = 100*(coefficients["test"]*test_subscore+coefficients["test_ood"]*test_ood_subscore+coefficients["speed_up"]*speedup_score)
     print(globalScore)

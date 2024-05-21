@@ -54,8 +54,13 @@ def reconstruct_metric_dict(metrics, dataset: str="test"):
     rec_metrics["ML"]["v_or"] = metrics[dataset]["ML"]["MAE_avg"]["v_or"]
     rec_metrics["ML"]["v_ex"] = metrics[dataset]["ML"]["MAE_avg"]["v_ex"]
 
-    rec_metrics["Physics"]["CURRENT_POS"]     = metrics[dataset]["Physics"]["CURRENT_POS"]["a_or"]["Violation_proportion"] * 100.
-    rec_metrics["Physics"]["VOLTAGE_POS"]     = metrics[dataset]["Physics"]["VOLTAGE_POS"]["v_or"]["Violation_proportion"] * 100.
+    current_pos = (metrics[dataset]["Physics"]["CURRENT_POS"]["a_or"]["Violation_proportion"] +
+                   metrics[dataset]["Physics"]["CURRENT_POS"]["a_ex"]["Violation_proportion"]) / 2 * 100.
+    voltage_pos = (metrics[dataset]["Physics"]["VOLTAGE_POS"]["v_or"]["Violation_proportion"] +
+                   metrics[dataset]["Physics"]["VOLTAGE_POS"]["v_ex"]["Violation_proportion"]) / 2 * 100.
+
+    rec_metrics["Physics"]["CURRENT_POS"]     = current_pos
+    rec_metrics["Physics"]["VOLTAGE_POS"]     = voltage_pos
     rec_metrics["Physics"]["LOSS_POS"]        = metrics[dataset]["Physics"]["LOSS_POS"]["violation_proportion"] * 100.
     rec_metrics["Physics"]["DISC_LINES"]      = metrics[dataset]["Physics"]["DISC_LINES"]["violation_proportion"] * 100.
     rec_metrics["Physics"]["CHECK_LOSS"]      = metrics[dataset]["Physics"]["CHECK_LOSS"]["violation_percentage"]

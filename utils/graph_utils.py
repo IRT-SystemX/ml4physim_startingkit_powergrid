@@ -21,6 +21,14 @@ from lightsim2grid.lightSimBackend import LightSimBackend
 from lips.dataset import DataSet
 
 def get_obs(benchmark):
+    """Get an observation of a Grid2op environment contained in a benchmark object
+
+    Args:
+        benchmark (_type_): LIPS benchmark
+
+    Returns:
+        _type_: Grid2op environment and an observation
+    """
     params = Parameters()
     params.ENV_DC = True
     env = grid2op.make(benchmark.env_name, param=params, backend=LightSimBackend())
@@ -78,6 +86,16 @@ def get_all_features_per_sub(obs: Observation, dataset: DataSet) -> torch.Tensor
     return features.float()
 
 def get_theta_node(obs, sub_id, bus):
+    """Get the voltage angles for a specific substation
+
+    Args:
+        obs (_type_): Grid2op observation
+        sub_id (int): the idenitifer of a substation
+        bus (int): the bus number
+
+    Returns:
+        float: returns the voltage angle at the node
+    """
     obj_to_sub = obs.get_obj_connect_to(substation_id=sub_id)
 
     lines_or_to_sub_bus = [i for i in obj_to_sub['lines_or_id'] if obs.line_or_bus[i] == bus]
@@ -197,6 +215,23 @@ def get_batches_pyg(edge_indices,
                     device="cpu",
                     edge_weights=None,
                     edge_weights_no_diag=None):
+    """Create Pytorch Geometric based data loaders
+    This function gets the features and targets at nodes and create batches of structured data
+
+    Args:
+        edge_indices (list): list of edge indices 
+        edge_indices_no_diag (_type_): list of edge indices without the self loops (without diagonal elements of adjacency matrix)
+        features (_type_): list of features (injections)
+        targets (_type_): list of targets (theta)
+        ybuses (_type_): admittance matrix
+        batch_size (int, optional): _description_. Defaults to 128.
+        device (str, optional): _description_. Defaults to "cpu".
+        edge_weights (_type_, optional): edge weight which is the admittance matrix element between two nodes. Defaults to None.
+        edge_weights_no_diag (_type_, optional): edge weight without values for diagonal elements of adjacency matrix. Defaults to None.
+
+    Returns:
+        _type_: _description_
+    """
     torchDataset = []
     for i, feature in enumerate(features):
         if edge_weights is not None:
@@ -218,6 +253,16 @@ def get_batches_pyg(edge_indices,
     return loader
 
 def prepare_dataset(benchmark, batch_size=128, device="cpu"):
+    """Prepare the dataset for GNN based model
+
+    Args:
+        benchmark (_type_): _description_
+        batch_size (int, optional): _description_. Defaults to 128.
+        device (str, optional): _description_. Defaults to "cpu".
+
+    Returns:
+        _type_: _description_
+    """
     warnings.filterwarnings("ignore")
     params = Parameters()
     params.ENV_DC = True
@@ -227,120 +272,73 @@ def prepare_dataset(benchmark, batch_size=128, device="cpu"):
     # Train dataset
     print("*******Train dataset*******")
     print(f"Train data size: {benchmark.train_dataset.size}")
-    pbar = tqdm(range(4))
-    pbar.set_description("Get Features")
-    train_features = get_all_features_per_sub(obs, benchmark.train_dataset.data) # dim [100000, 14, 2]
-    pbar.update(1)
-    pbar.set_description("Get Targets")
-    train_targets = get_target_variables_per_sub(obs, benchmark.train_dataset.data)
-    pbar.update(1)
-    pbar.set_description("Get edge_index info")
-    train_edge_indices = get_edge_index_from_ybus(benchmark.train_dataset.data["YBus"])
-    train_edge_weights = get_edge_weights_from_ybus(benchmark.train_dataset.data["YBus"], train_edge_indices)
-    train_edge_indices_no_diag = get_edge_index_from_ybus(benchmark.train_dataset.data["YBus"], add_loops=False)
-    train_edge_weights_no_diag = get_edge_weights_from_ybus(benchmark.train_dataset.data["YBus"], train_edge_indices_no_diag)
-    pbar.update(1)
-    pbar.set_description("Create loader")
-    train_loader = get_batches_pyg(edge_indices=train_edge_indices,
-                                   edge_indices_no_diag=train_edge_indices_no_diag,
-                                   features=train_features,
-                                   targets=train_targets,
-                                   ybuses=benchmark.train_dataset.data["YBus"],
-                                   edge_weights=train_edge_weights,
-                                   edge_weights_no_diag=train_edge_weights_no_diag,
-                                   batch_size=batch_size,
-                                   device=device)
-    pbar.update(1)
-    pbar.close()
+    train_loader = get_loader(obs, benchmark.train_dataset.data, batch_size, device)
     # Val dataset
     print("*******Validation dataset*******")
     print(f"Validation data size: {benchmark.val_dataset.size}")
-    pbar = tqdm(range(4))
-    pbar.set_description("Get Features")
-    val_features = get_all_features_per_sub(obs, benchmark.val_dataset.data) # dim [10000, 14, 2]
-    pbar.update(1)
-    pbar.set_description("Get Targets")
-    val_targets = get_target_variables_per_sub(obs, benchmark.val_dataset.data)
-    pbar.update(1)
-    pbar.set_description("Get edge_index info")
-    val_edge_indices = get_edge_index_from_ybus(benchmark.val_dataset.data["YBus"])
-    val_edge_weights = get_edge_weights_from_ybus(benchmark.val_dataset.data["YBus"], val_edge_indices)
-    val_edge_indices_no_diag = get_edge_index_from_ybus(benchmark.val_dataset.data["YBus"], add_loops=False)
-    val_edge_weights_no_diag = get_edge_weights_from_ybus(benchmark.val_dataset.data["YBus"], val_edge_indices_no_diag)
-    pbar.update(1)
-    pbar.set_description("Create loader")
-    val_loader = get_batches_pyg(edge_indices=val_edge_indices,
-                                 edge_indices_no_diag=val_edge_indices_no_diag,
-                                 features=val_features,
-                                 targets=val_targets,
-                                 ybuses=benchmark.val_dataset.data["YBus"],
-                                 edge_weights=val_edge_weights,
-                                 edge_weights_no_diag=val_edge_weights_no_diag,
-                                 batch_size=batch_size,
-                                 device=device)
-    pbar.update(1)
-    pbar.close()
+    val_loader = get_loader(obs, benchmark.val_dataset.data, batch_size, device)
     
     # Test dataset
     print("*******Test dataset*******")
     print(f"Test data size : {benchmark._test_dataset.size}")
-    pbar = tqdm(range(4))
-    pbar.set_description("Get Features")
-    test_features = get_all_features_per_sub(obs, benchmark._test_dataset.data) # dim [10000, 14, 2]
-    pbar.update(1)
-    pbar.set_description("Get Targets")
-    test_targets = get_target_variables_per_sub(obs, benchmark._test_dataset.data)
-    pbar.update(1)
-    pbar.set_description("Get edge_index info")
-    test_edge_indices = get_edge_index_from_ybus(benchmark._test_dataset.data["YBus"])
-    test_edge_weights = get_edge_weights_from_ybus(benchmark._test_dataset.data["YBus"], test_edge_indices)
-    test_edge_indices_no_diag = get_edge_index_from_ybus(benchmark._test_dataset.data["YBus"], add_loops=False)
-    test_edge_weights_no_diag = get_edge_weights_from_ybus(benchmark._test_dataset.data["YBus"], test_edge_indices_no_diag)
-    pbar.update(1)
-    pbar.set_description("Create loader")
-    test_loader = get_batches_pyg(edge_indices=test_edge_indices,
-                                  edge_indices_no_diag=test_edge_indices_no_diag,
-                                  features=test_features,
-                                  targets=test_targets,
-                                  ybuses=benchmark._test_dataset.data["YBus"],
-                                  edge_weights=test_edge_weights,
-                                  edge_weights_no_diag=test_edge_weights_no_diag,
-                                  batch_size=batch_size,
-                                  device=device)
-    pbar.update(1)
-    pbar.close()
+    test_loader = get_loader(obs, benchmark._test_dataset.data, batch_size, device)
+
     # OOD dataset
     print("*******OOD dataset*******")
     print(f"OOD data size: {benchmark._test_ood_topo_dataset.size}")
-    pbar = tqdm(range(4))
-    pbar.set_description("Get Features")
-    test_ood_features = get_all_features_per_sub(obs, benchmark._test_ood_topo_dataset.data)
-    pbar.update(1)
-    pbar.set_description("Get Targets")
-    test_ood_targets = get_target_variables_per_sub(obs, benchmark._test_ood_topo_dataset.data)
-    pbar.update(1)
-    pbar.set_description("Get edge_index info")
-    test_ood_edge_indices = get_edge_index_from_ybus(benchmark._test_ood_topo_dataset.data["YBus"])
-    test_ood_edge_weights = get_edge_weights_from_ybus(benchmark._test_ood_topo_dataset.data["YBus"], test_ood_edge_indices)
-    test_ood_edge_indices_no_diag = get_edge_index_from_ybus(benchmark._test_ood_topo_dataset.data["YBus"], add_loops=False)
-    test_ood_edge_weights_no_diag = get_edge_weights_from_ybus(benchmark._test_ood_topo_dataset.data["YBus"], test_ood_edge_indices_no_diag)
-    pbar.update(1)
-    pbar.set_description("Create loader")
-    test_ood_loader = get_batches_pyg(edge_indices=test_ood_edge_indices,
-                                            edge_indices_no_diag=test_ood_edge_indices_no_diag,
-                                            features=test_ood_features,
-                                            targets=test_ood_targets,
-                                            ybuses=benchmark._test_ood_topo_dataset.data["YBus"],
-                                            edge_weights=test_ood_edge_weights,
-                                            edge_weights_no_diag=test_ood_edge_weights_no_diag,
-                                            batch_size=batch_size,
-                                            device=device)
-    pbar.update(1)
-    pbar.close()
+    test_ood_loader = get_loader(obs, benchmark._test_ood_topo_dataset.data, batch_size, device)
 
     return train_loader, val_loader, test_loader, test_ood_loader
 
+def get_loader(obs, data, batch_size, device):
+    """
+    This function structures the features, targets, edge_indices and edge weights through a GNN
+    point of view and create a data loader for a given dataset.
+
+    Args:
+        obs (_type_): an observation of environment
+        data (dict): the dataset
+        batch_size (int): the batch size considered for data loader
+        device (str): the device on which the computation should be performed
+
+    Returns:
+        _type_: _description_
+    """
+    pbar = tqdm(range(4))
+    pbar.set_description("Get Features")
+    features = get_all_features_per_sub(obs, data)
+    pbar.update(1)
+    pbar.set_description("Get Targets")
+    targets = get_target_variables_per_sub(obs, data)
+    pbar.update(1)
+    pbar.set_description("Get edge_index info")
+    edge_indices = get_edge_index_from_ybus(data["YBus"])
+    edge_weights = get_edge_weights_from_ybus(data["YBus"], edge_indices)
+    edge_indices_no_diag = get_edge_index_from_ybus(data["YBus"], add_loops=False)
+    edge_weights_no_diag = get_edge_weights_from_ybus(data["YBus"], edge_indices_no_diag)
+    pbar.update(1)
+    pbar.set_description("Create loader")
+    loader = get_batches_pyg(edge_indices=edge_indices,
+                             edge_indices_no_diag=edge_indices_no_diag,
+                             features=features,
+                             targets=targets,
+                             ybuses=data["YBus"],
+                             edge_weights=edge_weights,
+                             edge_weights_no_diag=edge_weights_no_diag,
+                             batch_size=batch_size,
+                             device=device)
+    pbar.update(1)
+    pbar.close()
+
+    return loader
+
 class GPGinput_without_NN(MessagePassing):
+    """Graph Power Grid Input layer
+
+    This is the input layer of GNN initialize the theta (voltage angles) with zeros and
+    updates them through power flow equation
+
+    """
     def __init__(self,
                  device="cpu"
                  ):
@@ -349,9 +347,14 @@ class GPGinput_without_NN(MessagePassing):
         self.device = device
 
     def forward(self, batch):
-
+        
+        # Initialize the voltage angles (theta) with zeros
         self.theta = torch.zeros_like(batch.y, dtype=batch.y.dtype)
 
+        # Compute a message and propagate it to each node, it does 3 steps
+        # 1) It computes a message (Look at the message function below)
+        # 2) It propagates the message using an aggregation (sum here)
+        # 3) It calls the update function which could be Neural Network
         aggr_msg = self.propagate(batch.edge_index_no_diag,
                                   y=self.theta,
                                   edge_weights=batch.edge_attr_no_diag * 100.0
@@ -372,23 +375,62 @@ class GPGinput_without_NN(MessagePassing):
         return out, aggr_msg
     
     def message(self, y_j, edge_weights):
+        """Compute the message that should be propagated
+        
+        This function compute the message (which is the multiplication of theta and 
+        admittance matrix elements connecting node i to j)
+
+        Args:
+            y_j (_type_): the theta (voltage angle) value at a neighboring node j
+            edge_weights (_type_): corresponding edge_weight (admittance matrix element)
+
+        Returns:
+            _type_: active powers for each neighboring node
+        """
         tmp = y_j * edge_weights.view(-1,1)
         return tmp
     
     def update(self, aggr_out):
+        """update function of message passing layers
+
+        We output directly the aggreated message (sum)
+
+        Args:
+            aggr_out (_type_): the aggregated message
+
+        Returns:
+            _type_: the aggregated message
+        """
         return aggr_out
     
 class GPGintermediate(MessagePassing):
+    """Graph Power Grid intermediate layer
+
+    This is the intermediate layer of GNN that gets the theta from the previous layer and
+    updates them through power flow equation
+    """
     def __init__(self,
                  device="cpu"):
         super().__init__(aggr="add")
         self.theta = None
         self.device = device
         
-    
     def forward(self, batch, theta):
+        """The forward pass of message passing network
+
+        Args:
+            batch (_type_): the data batch
+            theta (_type_): the voltage angle from the previous layer
+
+        Returns:
+            _type_: the updated voltage angles
+        """
         self.theta = theta
         
+        # Compute a message and propagate it to each node, it does 3 steps
+        # 1) It computes a message (Look at the message function below)
+        # 2) It propagates the message using an aggregation (sum here)
+        # 3) It calls the update function which could be Neural Network
         aggr_msg = self.propagate(batch.edge_index_no_diag,
                                   y=self.theta,
                                   edge_weights=batch.edge_attr_no_diag * 100.0
@@ -416,27 +458,43 @@ class GPGintermediate(MessagePassing):
         return aggr_out
 
 class LocalConservationLayer(MessagePassing):
+    """Compute local conservation error
+
+    This class computes the local conservation error without any update of voltage angles.
+
+    Args:
+        MessagePassing (_type_): _description_
+    """
     def __init__(self):
         super().__init__(aggr="add")
         self.thetas = None
         
     def forward(self, batch, thetas=None):
+        # theta from previous GNN layer
         self.thetas = thetas
 
+        # The difference with GPG layers resides also in propagation which gets the edge_index
+        # with self loops (with diagonal elements of adjacency matrix)
         aggr_message = self.propagate(batch.edge_index,
                                       y=self.thetas,
                                       edge_weights=batch.edge_attr * 100)
 
         input_node_power = (batch.x[:,0] - batch.x[:,1]).view(-1,1)
+        # compute the local conservation error (at node level)
         nodal_error = input_node_power - aggr_message
 
         return nodal_error
 
     def message(self, y_i, y_j, edge_weights):
+        """
+        Compute the message
+        """
         tmp = y_j * edge_weights.view(-1,1)
         return tmp
 
 class GPGmodel_without_NN(torch.nn.Module):
+    """Create a Graph Power Grid (GPG) model without learning
+    """
     def __init__(self,
                  num_gnn_layers=10,
                  device="cpu"):
@@ -451,6 +509,12 @@ class GPGmodel_without_NN(torch.nn.Module):
         self.build_model()
 
     def build_model(self):
+        """Build the GNN message passing model
+
+        It composed of a first input layer and a number of intermediate message passing layers
+        These layes interleave with local conservation layers which allow to compute the error
+        at the layer level
+        """
         self.input_layer = GPGinput_without_NN(device=self.device)
         self.lc_layer = LocalConservationLayer()
         self.inter_layers = torch.nn.ModuleList([GPGintermediate(device=self.device) for _ in range(self.num_gnn_layers)])
@@ -469,18 +533,19 @@ class GPGmodel_without_NN(torch.nn.Module):
         return out, errors
 
 def get_active_power(dataset, obs, theta, index):
-    """Computes the active power (flows) from thetas (subs) for an index
+    """
+    Computes the active power (flows) from thetas (subs) for a specific index
 
     Parameters
     ----------
     dataset : _type_
-        _description_
+        data
     obs : _type_
-        _description_
+        Grid2op observation
     theta : _type_
-        _description_
+        voltage angle
     index : _type_
-        _description_
+        the observation index for which the active powers should be computed  
 
     Returns
     -------
@@ -518,21 +583,23 @@ def get_active_power(dataset, obs, theta, index):
     return p_or.imag * 100 , p_ex.imag * 100
 
 def get_all_active_powers(dataset, obs, theta_bus):
-    """Computes all the active powers for all the observations from theta at bus
+    """Computes all the active powers 
+    
+    It computes the active powers for all the observations from thetas (voltage angles) at bus
 
     Parameters
     ----------
     dataset : _type_
-        _description_
+        the data
     obs : _type_
-        _description_
+        Grid2op observation
     theta_bus : _type_
-        _description_
+        the voltage angles at buses
 
     Returns
     -------
     _type_
-        _description_
+        numpy arrays corresponding to active powers at the origin and extremity side of power lines
     """
     data_size = len(dataset["p_or"])
     p_or = np.zeros_like(dataset["p_or"])

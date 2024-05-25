@@ -564,7 +564,7 @@ def get_active_power(dataset, obs, theta, index):
             A_or[line, index_array[line,1]] = 1
             A_or[line, index_array[line,2]] = -1
             A_ex[line, index_array[line,1]] = -1
-            A_ex[line, index_array[line,2]] = 1        
+            A_ex[line, index_array[line,2]] = 1
     
     # Create the diagonal matrix D (MxM)
     Ybus = dataset["YBus"][index][:obs.n_sub,:obs.n_sub]

@@ -1,0 +1,23 @@
+{
+    "evaluateonly": false,
+    "scoringonly": false,
+    "simulator_config": {
+      "simulator_type": "custom",
+      "name": "torch_fc",
+      "model": "TorchSimulator",
+      "simulator_file": "MyCustomFullyConnected",
+      "model_type": "fully_connected",
+      "scaler_type": "simple",
+      "scaler_module": "scaler",
+      "scaler": "StandardScaler",
+      "config_name": "DEFAULT",
+      "seed": 42
+    },
+    "simulator_extra_parameters": {},
+    "training_config": {
+      "epochs": 2,
+      "train_batch_size": 128,
+      "lr": 3e-4
+    }
+  }
+  

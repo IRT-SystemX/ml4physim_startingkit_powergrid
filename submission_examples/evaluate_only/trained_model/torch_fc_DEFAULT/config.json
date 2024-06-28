@@ -1,0 +1,61 @@
+{
+    "activation": "relu",
+    "bench_config_name": "Benchmark_competition",
+    "bench_config_path": "/app/data/configs/benchmarks/lips_idf_2023.ini",
+    "bench_kwargs": {
+        "attr_physics": null,
+        "attr_tau": [
+            "line_status",
+            "topo_vect"
+        ],
+        "attr_x": [
+            "prod_p",
+            "prod_v",
+            "load_p",
+            "load_q"
+        ],
+        "attr_y": [
+            "a_or",
+            "a_ex",
+            "p_or",
+            "p_ex",
+            "v_or",
+            "v_ex"
+        ]
+    },
+    "ckpt_freq": 50,
+    "device": "cuda:0",
+    "dropout": 0.0,
+    "epochs": 1,
+    "eval_batch_size": 128,
+    "input_dropout": 0.0,
+    "layer": "linear",
+    "layers": [
+        300,
+        300,
+        300,
+        300
+    ],
+    "loss": {
+        "name": "MSELoss",
+        "params": {
+            "reduce": null,
+            "reduction": "mean",
+            "size_average": null
+        }
+    },
+    "metrics": [
+        "MAELoss"
+    ],
+    "name": "torch_fc",
+    "optimizer": {
+        "name": "adam",
+        "params": {
+            "lr": 0.0003
+        }
+    },
+    "save_freq": false,
+    "shuffle": false,
+    "sim_config_name": "DEFAULT",
+    "train_batch_size": 128
+}

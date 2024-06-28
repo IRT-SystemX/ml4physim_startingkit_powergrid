@@ -142,3 +142,6 @@ input_data_local/*
 input_data_local/l2rpn_case14_sandbox/Benchmark_competition/*
 local_env/data/*
 local_env/output/*
+
+
+*.zip

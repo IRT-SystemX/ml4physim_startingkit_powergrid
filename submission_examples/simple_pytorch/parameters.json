@@ -1,0 +1,20 @@
+{
+    "evaluateonly": false,
+    "scoringonly": false,
+    "simulator_config": {
+      "simulator_type": "simple_torch",
+      "name": "torch_fc",
+      "model": "TorchFullyConnected",
+      "model_type": "fully_connected",
+      "scaler_type": "simple",
+      "scaler_module": "scaler",
+      "scaler": "StandardScaler",
+      "config_name": "DEFAULT",
+      "seed": 42
+    },
+    "simulator_extra_parameters": {},
+    "training_config": {
+      "epochs": 1
+    }
+  }
+  

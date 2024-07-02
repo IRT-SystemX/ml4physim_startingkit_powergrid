@@ -6,9 +6,8 @@
       "name": "torch_fc",
       "model": "MyCustomFullyConnected",
       "simulator_file": "MyCustomFullyConnected",
-      "model_type": "fully_connected",
       "scaler_type": "simple",
-      "scaler_module": "scaler",
+      "scaler_module": "standard_scaler",
       "scaler": "StandardScaler",
       "config_name": "DEFAULT",
       "seed": 42

@@ -227,3 +227,4 @@ class MyCustomFullyConnected(nn.Module):
         loss_func = LOSSES[loss_name](**kwargs)
         
         return loss_func
+    

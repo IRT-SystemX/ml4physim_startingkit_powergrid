@@ -1,0 +1,23 @@
+{
+    "evaluateonly": false,
+    "scoringonly": false,
+    "simulator_config": {
+      "simulator_type": "simple_tf",
+      "name": "tf_fc",
+      "model_type": "leap_net",
+      "model": "LeapNet",
+      "scaler_type": "simple",
+      "scaler_module": "powergrid_scaler",
+      "scaler": "PowerGridScaler",
+      "config_name": "DEFAULT",
+      "seed": 42
+    },
+    "simulator_extra_parameters": {
+      "topo_vect_to_tau": "given_list",
+      "activation": "leaky_relu"
+    },
+    "training_config": {
+      "epochs": 100
+    }
+  }
+  

@@ -17,6 +17,8 @@ class TorchSimulator(AugmentedSimulator):
             A benchmark object passed inside the ingestion program
         config : ConfigManager
             A lips ConfigManager object allowing the access to all the parameters in `config.ini`
+        scaler : StandardScaler
+            A scaler class already implemented in LIPS and selected in parameters.json file
         device : torch.device
             the device on which the execution should be executed, controlled by ingestion program
         **kwargs
@@ -26,6 +28,7 @@ class TorchSimulator(AugmentedSimulator):
     def __init__(self,
                  benchmark,
                  config,
+                 scaler,
                  device, 
                  **kwargs):
         ## You can use this function to infer the inputs and outputs size or giving directly the sizes
@@ -45,6 +48,12 @@ class TorchSimulator(AugmentedSimulator):
                               activation=F.relu
                              )
 
+        ## It is not used in this simple implementation
+        if scaler is not None:
+            self.scaler = scaler()
+        else:
+            self.scaler = None
+        self._model = None
 
         super().__init__(model)
         self.model = model

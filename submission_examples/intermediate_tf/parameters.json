@@ -2,7 +2,7 @@
     "evaluateonly": false,
     "scoringonly": false,
     "simulator_config": {
-      "simulator_type": "custom_tf",
+      "simulator_type": "intermediate_tf",
       "name": "tf_fc",
       "model": "MyCustomFullyConnected",
       "simulator_file": "MyCustomFullyConnected",

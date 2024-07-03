@@ -133,6 +133,8 @@ dmypy.json
 #custom ignore folders
 .vscode
 
+**/.DS_Store
+
 input_data_local/l2rpn_case14_sandbox/*
 input_data_local/l2rpn_neurips_2020_track1_small/*
 input_data_local/l2rpn_idf_2023/*

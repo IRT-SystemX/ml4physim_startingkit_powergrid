@@ -1,0 +1,22 @@
+{
+    "evaluateonly": false,
+    "scoringonly": false,
+    "simulator_config": {
+      "simulator_type": "advanced",
+      "simulator_file": "CustomFullyConnected",
+      "name": "tf_fc",
+      "simulator": "TfSimulator",
+      "scaler_type": "simple",
+      "scaler_module": "standard_scaler",
+      "scaler": "StandardScaler",
+      "config_name": "DEFAULT",
+      "seed": 42
+    },
+    "simulator_extra_parameters": {},
+    "training_config": {
+      "epochs":10,
+      "lr":3e-4,
+      "batch_size": 256
+    }
+  }
+  

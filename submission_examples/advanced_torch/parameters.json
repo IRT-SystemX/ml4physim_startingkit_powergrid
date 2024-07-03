@@ -2,13 +2,12 @@
     "evaluateonly": false,
     "scoringonly": false,
     "simulator_config": {
-      "simulator_type": "custom",
+      "simulator_type": "advanced",
+      "simulator_file": "CustomFullyConnected",
       "name": "torch_fc",
-      "model": "TorchSimulator",
-      "simulator_file": "MyCustomFullyConnected",
-      "model_type": "fully_connected",
+      "simulator": "TorchSimulator",
       "scaler_type": "simple",
-      "scaler_module": "scaler",
+      "scaler_module": "standard_scaler",
       "scaler": "StandardScaler",
       "config_name": "DEFAULT",
       "seed": 42

@@ -9,26 +9,41 @@ from lips.augmented_simulators import AugmentedSimulator
 from lips.benchmark.powergridBenchmark import PowerGridBenchmark
 
 class TorchSimulator(AugmentedSimulator):
+    """Simulator class that allows to train and evalute your custom model
+
+        Parameters
+        ----------
+        benchmark : PowerGridBenchmark
+            A benchmark object passed inside the ingestion program
+        config : ConfigManager
+            A lips ConfigManager object allowing the access to all the parameters in `config.ini`
+        device : torch.device
+            the device on which the execution should be executed, controlled by ingestion program
+        **kwargs
+            The set of supplementary parameters passed through the parameters.json file and `simulator_extra_parameters` key
+        
+        """        
     def __init__(self,
                  benchmark,
-                 device,
+                 config,
+                 device, 
                  **kwargs):
-        
-        ## the dataset is provided through the benchmark object during ingestion
-
-        ## Paramaters can be passsed through "simulator_extra_parameters" in the paraùeters.json file
-        params = kwargs
-        
-
+        ## You can use this function to infer the inputs and outputs size or giving directly the sizes
         input_size, output_size = infer_input_output_size(benchmark.train_dataset)
 
+        self.params = config.get_options_dict() # Load parameters from config.ini file
+        ## Paramaters can be passsed through "simulator_extra_parameters" in the parameters.json file
+        self.params.update(kwargs) # update parameters with user defined `simulator_extra_parameters` parameters
+        name = self.params["name"]
+        hidden_sizes = self.params["layers"]     
 
-        ## initialisation of the model
-        model = MyCustomModel(input_size=input_size,
-                               output_size=output_size,
-                               hidden_sizes=(50,100,50),
-                               activation=F.relu
-                               )
+        # initialisation of the model
+        model = MyCustomModel(name=name,
+                              input_size=input_size,
+                              output_size=output_size,
+                              hidden_sizes=hidden_sizes,
+                              activation=F.relu
+                             )
 
 
         super().__init__(model)
@@ -160,6 +175,9 @@ class MyCustomModel(nn.Module):
         self.name = name
         
         self.activation = activation
+        
+        if (input_size is None) & (output_size is None):
+            self.input_size, self.output_size = infer_input_output_size()
 
         self.input_size = input_size
         self.output_size = output_size
@@ -181,5 +199,3 @@ class MyCustomModel(nn.Module):
             out = self.activation(out)
         out = self.output_layer(out)
         return out
-    
-

@@ -4,10 +4,15 @@ import itertools
 import warnings
 
 import numpy.typing as npt
+from scipy.sparse import csr_matrix
 import numpy as np
 from tqdm.auto import tqdm
 
+import networkx as nx
+import matplotlib.pyplot as plt
+
 import torch
+import torch_geometric as pyg
 from torch_geometric.data import Data
 from torch_geometric.loader import DataLoader
 from torch_geometric.nn import MessagePassing
@@ -20,6 +25,77 @@ from lightsim2grid.lightSimBackend import LightSimBackend
 
 from lips.dataset import DataSet
 
+def visualize_graph(edge_index, 
+                    node_color="orange", 
+                    node_size=1e3,
+                    edge_labels=None,
+                    font_size=8,
+                    edge_width=0.7,
+                    edge_alpha=0.8,
+                    figsize=(18,12),
+                    seed=2,
+                    save_fig=False
+                    ):
+    """Visualize the graph using networkx
+
+    Parameters
+    ----------
+    edge_index : ``list``
+        list containing the pair of nodes indicating the presence of edges
+    node_color : str, optional
+        _description_, by default "orange"
+    node_size : _type_, optional
+        _description_, by default 1e3
+    font_size : int, optional
+        _description_, by default 8
+    edge_width : float, optional
+        _description_, by default 0.7
+    edge_alpha : float, optional
+        _description_, by default 0.8
+    figsize : tuple, optional
+        _description_, by default (18,12)
+    seed : int, optional
+        _description_, by default 2
+    save_fig : bool, optional
+        _description_, by default False
+    """
+    g = nx.Graph()
+    g.add_edges_from(edge_index)
+    labels = {i:f"{i}" for i in g.nodes}
+
+    plt.figure(figsize=figsize)
+    pos = nx.spring_layout(g, seed=seed)
+    nx.draw_networkx_nodes(g, pos, node_color=node_color, node_size=node_size)
+    nx.draw_networkx_labels(g, pos, labels=labels, font_size=font_size)
+    nx.draw_networkx_edges(g, pos, width=edge_width, alpha=edge_alpha)
+    if edge_labels is not None:
+        nx.draw_networkx_edge_labels(g, pos, edge_labels=edge_labels, font_size=font_size)
+    if save_fig:
+        pass
+    else:
+        plt.show()
+
+    return g
+
+def visualize_batch(batch):
+    """Visualize a batch of graphs at once
+
+    Parameters
+    ----------
+    batch : _type_
+        A batch of torch-geometric `DataLoader`
+    """
+    g = pyg.utils.to_networkx(batch, to_undirected=True)
+    labels = {i:f"{i}" for i, _ in enumerate(batch.x)}
+
+    plt.figure(figsize=(18,12))
+    pos = nx.spring_layout(g, seed=2)
+    nx.draw_networkx_nodes(g, pos, node_color="orange", node_size=1e2)
+    nx.draw_networkx_labels(g, pos, labels=labels, font_size=8)
+    nx.draw_networkx_edges(g, pos, width=0.7, alpha=0.8)
+    #nx.draw_networkx_edge_labels(g, pos)
+    plt.show()
+    
 def get_obs(benchmark):
     """Get an observation of a Grid2op environment contained in a benchmark object
 
@@ -157,7 +233,7 @@ def get_target_variables_per_sub(obs: Observation, dataset: DataSet) -> torch.Te
     targets = torch.tensor(get_theta_bus(dataset, obs).real).unsqueeze(dim=2)
     return targets.float()
 
-def get_edge_index_from_ybus(ybus_matrix, add_loops=True) -> list:
+def get_edge_index_from_ybus(ybus_matrix, obs, add_loops=True) -> list:
     """Get all the edge_indices from Ybus matrix
 
     Parameters
@@ -172,17 +248,22 @@ def get_edge_index_from_ybus(ybus_matrix, add_loops=True) -> list:
     ``list``
         a list of edge indices
     """
-    ybus_mat = copy.deepcopy(ybus_matrix)
+    # ybus_mat = copy.deepcopy(ybus_matrix)
     edge_indices = []
-    for ybus in ybus_mat:
+    #for ybus in ybus_mat:
+    for ybus in ybus_matrix:
+        ybus_cpy = copy.deepcopy(ybus)
+        if isinstance(ybus_cpy, csr_matrix):
+            ybus_cpy = np.squeeze(np.asarray(ybus_cpy.todense()))
+            ybus_cpy = ybus_cpy.reshape(obs.n_sub*2, obs.n_sub*2)
         if not(add_loops):
-            np.fill_diagonal(ybus, val=0.)
-        bus_or, bus_ex = np.where(ybus)
+            np.fill_diagonal(ybus_cpy, val=0.)
+        bus_or, bus_ex = np.where(ybus_cpy)
         edge_index = np.column_stack((bus_or, bus_ex)).T
         edge_indices.append(edge_index)
     return edge_indices
 
-def get_edge_weights_from_ybus(ybus_matrix, edge_indices) -> list:
+def get_edge_weights_from_ybus(ybus_matrix, edge_indices, obs) -> list:
     """Get edge weights corresponding to each edge index
 
     Parameters
@@ -200,13 +281,17 @@ def get_edge_weights_from_ybus(ybus_matrix, edge_indices) -> list:
     edge_weights = []
     for edge_index, ybus in zip(edge_indices, ybus_matrix):
         edge_weight = []
+        if isinstance(ybus, csr_matrix):
+            ybus = np.squeeze(np.asarray(ybus.todense()))
+            ybus = ybus.reshape(obs.n_sub*2, obs.n_sub*2)
         for i in range(edge_index.shape[1]):
             edge_weight.append(ybus[edge_index[0][i], edge_index[1][i]])
         edge_weight = np.array(edge_weight)
         edge_weights.append(edge_weight)
     return edge_weights
 
-def get_batches_pyg(edge_indices,
+def get_batches_pyg(obs,
+                    edge_indices,
                     edge_indices_no_diag,
                     features,
                     targets,
@@ -239,13 +324,20 @@ def get_batches_pyg(edge_indices,
             edge_weight_no_diag = torch.tensor(edge_weights_no_diag[i], dtype=feature.dtype)
         else:
             edge_weight=None
+            
+        if isinstance(ybuses, csr_matrix):
+            ybus = np.squeeze(np.asarray(ybuses[i].todense()))
+            ybus = ybus.reshape(obs.n_sub*2, obs.n_sub*2)
+        else:
+            ybus = ybuses[i]
+            
         sample_data = Data(x=feature,
                            y=targets[i],
                            edge_index=torch.tensor(edge_indices[i]),
                            edge_index_no_diag=torch.tensor(edge_indices_no_diag[i]),
                            edge_attr=edge_weight,
                            edge_attr_no_diag=edge_weight_no_diag,
-                           ybus=torch.tensor(ybuses[i][:14,:14].real))
+                           ybus=torch.tensor(ybus[:obs.n_sub,:obs.n_sub].real))
         sample_data.to(device)
         torchDataset.append(sample_data)
     loader = DataLoader(torchDataset, batch_size=batch_size)
@@ -312,13 +404,14 @@ def get_loader(obs, data, batch_size, device):
     targets = get_target_variables_per_sub(obs, data)
     pbar.update(1)
     pbar.set_description("Get edge_index info")
-    edge_indices = get_edge_index_from_ybus(data["YBus"])
-    edge_weights = get_edge_weights_from_ybus(data["YBus"], edge_indices)
-    edge_indices_no_diag = get_edge_index_from_ybus(data["YBus"], add_loops=False)
-    edge_weights_no_diag = get_edge_weights_from_ybus(data["YBus"], edge_indices_no_diag)
+    edge_indices = get_edge_index_from_ybus(data["YBus"], obs, add_loops=True)
+    edge_weights = get_edge_weights_from_ybus(data["YBus"], edge_indices, obs)
+    edge_indices_no_diag = get_edge_index_from_ybus(data["YBus"], obs, add_loops=False)
+    edge_weights_no_diag = get_edge_weights_from_ybus(data["YBus"], edge_indices_no_diag, obs)
     pbar.update(1)
     pbar.set_description("Create loader")
-    loader = get_batches_pyg(edge_indices=edge_indices,
+    loader = get_batches_pyg(obs,
+                             edge_indices=edge_indices,
                              edge_indices_no_diag=edge_indices_no_diag,
                              features=features,
                              targets=targets,
@@ -340,11 +433,13 @@ class GPGinput_without_NN(MessagePassing):
 
     """
     def __init__(self,
-                 device="cpu"
+                 ref_node,
+                 device="cpu",
                  ):
         super().__init__(aggr="add")
         self.theta = None
         self.device = device
+        self.ref_node=ref_node
 
     def forward(self, batch):
         
@@ -359,17 +454,17 @@ class GPGinput_without_NN(MessagePassing):
                                   y=self.theta,
                                   edge_weights=batch.edge_attr_no_diag * 100.0
                                  )
-        
+        n_bus = batch.ybus.size()[1]
         # keep only the diagonal elements of the ybus 3D tensors
-        ybus = batch.ybus.view(-1, 14, 14) * 100.0
+        ybus = batch.ybus.view(-1, n_bus, n_bus) * 100.0
         ybus = ybus * torch.eye(*ybus.shape[-2:], device=self.device).repeat(ybus.shape[0], 1, 1)
         denominator = ybus[ybus.nonzero(as_tuple=True)].view(-1,1)
         
         input_node_power = (batch.x[:,0] - batch.x[:,1]).view(-1,1)
         out = (input_node_power - aggr_msg) / denominator
 
-        #we impose that node 0 has theta=0
-        out = out.view(-1, 14, 1) - out.view(-1,14,1)[:,0].repeat_interleave(14, 1).view(-1, 14, 1)
+        #we impose that reference node has theta=0
+        out = out.view(-1, n_bus, 1) - out.view(-1,n_bus,1)[:,self.ref_node].repeat_interleave(n_bus, 1).view(-1, n_bus, 1)
         out = out.flatten().view(-1,1)
         
         return out, aggr_msg
@@ -410,8 +505,10 @@ class GPGintermediate(MessagePassing):
     updates them through power flow equation
     """
     def __init__(self,
+                 ref_node,
                  device="cpu"):
         super().__init__(aggr="add")
+        self.ref_node = ref_node
         self.theta = None
         self.device = device
         
@@ -436,16 +533,17 @@ class GPGintermediate(MessagePassing):
                                   edge_weights=batch.edge_attr_no_diag * 100.0
                                  )
 
+        n_bus = batch.ybus.size()[1]
         # keep only the diagonal elements of the ybus 3D tensors for denominator part
-        ybus = batch.ybus.view(-1, 14, 14) * 100.0
+        ybus = batch.ybus.view(-1, n_bus, n_bus) * 100.0
         ybus = ybus * torch.eye(*ybus.shape[-2:], device=self.device).repeat(ybus.shape[0], 1, 1)
         denominator = ybus[ybus.nonzero(as_tuple=True)].view(-1,1)
 
         input_node_power = (batch.x[:,0] - batch.x[:,1]).view(-1,1)
         out = (input_node_power - aggr_msg) / denominator
 
-        #we impose that node 0 has theta=0
-        out = out.view(-1, 14, 1) - out.view(-1,14,1)[:,0].repeat_interleave(14, 1).view(-1, 14, 1)
+        #we impose that reference node has theta=0
+        out = out.view(-1, n_bus, 1) - out.view(-1,n_bus,1)[:,self.ref_node].repeat_interleave(n_bus, 1).view(-1, n_bus, 1)
         out = out.flatten().view(-1,1)
         
         return out, aggr_msg
@@ -496,9 +594,11 @@ class GPGmodel_without_NN(torch.nn.Module):
     """Create a Graph Power Grid (GPG) model without learning
     """
     def __init__(self,
+                 ref_node,
                  num_gnn_layers=10,
                  device="cpu"):
         super().__init__()
+        self.ref_node = ref_node
         self.num_gnn_layers = num_gnn_layers
         self.device = device
 
@@ -515,9 +615,11 @@ class GPGmodel_without_NN(torch.nn.Module):
         These layes interleave with local conservation layers which allow to compute the error
         at the layer level
         """
-        self.input_layer = GPGinput_without_NN(device=self.device)
+        self.input_layer = GPGinput_without_NN(ref_node=self.ref_node, device=self.device)
         self.lc_layer = LocalConservationLayer()
-        self.inter_layers = torch.nn.ModuleList([GPGintermediate(device=self.device) for _ in range(self.num_gnn_layers)])
+        self.inter_layers = torch.nn.ModuleList([GPGintermediate(ref_node=self.ref_node, 
+                                                                 device=self.device) 
+                                                 for _ in range(self.num_gnn_layers)])
 
     def forward(self, batch):
         errors = []
@@ -567,7 +669,11 @@ def get_active_power(dataset, obs, theta, index):
             A_ex[line, index_array[line,2]] = 1
     
     # Create the diagonal matrix D (MxM)
-    Ybus = dataset["YBus"][index][:obs.n_sub,:obs.n_sub]
+    Ybus = dataset["YBus"][index]
+    if isinstance(dataset["YBus"], csr_matrix):
+        Ybus = np.squeeze(np.asarray(Ybus.todense()))
+        Ybus = Ybus.reshape(obs.n_sub*2, obs.n_sub*2)
+    Ybus = Ybus[:obs.n_sub,:obs.n_sub]
     D = np.zeros((obs.n_line, obs.n_line), dtype=complex)
     for line in index_array[:, 0]:
         bus_from = index_array[line, 1]

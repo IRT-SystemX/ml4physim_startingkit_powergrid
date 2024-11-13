@@ -27,7 +27,10 @@ class ModelApiError(Exception):
         self.msg = msg
         print(msg)
 
-
+def exit_program():
+    print("Error exiting")
+    sys.exit(0)
+    
 def import_metrics(json_metrics):
     # path_submission_parameters = os.path.join(input_dir, 'json_metrics.json')
     print(json_metrics)
@@ -49,6 +52,7 @@ def create_parser():
                              help="output directory where the results of evaluation should be saved")
     
     return this_parser
+
 
 
 # =============================== MAIN ========================================
@@ -90,8 +94,8 @@ if __name__ == "__main__":
         score_file.write("Test OOD results disc" + str(test_ood_results_disc) + "\n")
         
     mean_global_scores = np.mean(global_scores_all)
-    std_glboal_scores = np.std(global_scores_all)
+    std_global_scores = np.std(global_scores_all)
     score_file.write(f"Mean Global score : {mean_global_scores:.12f}\n")
-    score_file.write(f"Std Global score : {std_glboal_scores:.12f}\n")
+    score_file.write(f"Std Global score : {std_global_scores:.12f}\n")
     score_file.close()
     
